@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeri Testimoni</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .fade-in { animation: fadeIn 0.8s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-200 text-gray-800 font-sans antialiased min-h-screen">
+
+    <div class="max-w-6xl mx-auto px-4 py-16">
+        <div class="text-center mb-16 fade-in">
+            <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-4 tracking-tight">
+                Bukti Transaksi Kami
+            </h1>
+            <p class="text-lg text-gray-500 max-w-2xl mx-auto">Lihat langsung testimoni dari pelanggan yang sudah mempercayakan layanannya kepada tim kami.</p>
+            
+            <div class="mt-8 inline-block relative w-64">
+                <select id="filterAdmin" onchange="loadTesti()" class="block appearance-none w-full bg-white border border-gray-300 hover:border-indigo-500 px-4 py-3 pr-8 rounded-xl shadow leading-tight focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300 text-gray-700 font-medium">
+                    <option value="semua">Semua Testimoni</option>
+                    <option value="ray">Testimoni Ray</option>
+                    <option value="vald">Testimoni Vald</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <div id="testiContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="col-span-full flex justify-center py-10">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadTesti() {
+            const admin = document.getElementById("filterAdmin").value;
+            const container = document.getElementById("testiContainer");
+            
+            try {
+                const res = await fetch(`/api/testi?admin=${admin}`);
+                const data = await res.json();
+                
+                container.innerHTML = ""; 
+                
+                if(data.length === 0) {
+                    container.innerHTML = `<p class="text-center col-span-full text-gray-500 text-lg">Belum ada testimoni di kategori ini.</p>`;
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    const date = new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                    // Animasi delay bergantian
+                    const delay = index * 100;
+                    container.innerHTML += `
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl fade-in" style="animation-delay: ${delay}ms; animation-fill-mode: both;">
+                            <img src="${item.imageUrl}" alt="Testi" class="w-full h-60 object-cover">
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold text-gray-800 mb-1">${item.productName}</h3>
+                                <p class="text-indigo-600 font-extrabold text-lg mb-4">Rp ${item.price.toLocaleString('id-ID')}</p>
+                                <div class="flex justify-between items-center text-sm text-gray-500 pt-4 border-t border-gray-100">
+                                    <span class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase">${item.uploadedBy.charAt(0)}</div>
+                                        ${item.uploadedBy}
+                                    </span>
+                                    <span>${date}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                container.innerHTML = `<p class="text-red-500 text-center col-span-full">Gagal memuat server.</p>`;
+            }
+        }
+        
+        loadTesti();
+    </script>
+</body>
+</html>
