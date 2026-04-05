@@ -3,104 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Testimonials</title>
+    <title>Premium Portofolio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #030712; color: #f9fafb; }
-        .glass-header { background: rgba(3, 7, 18, 0.7); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
         .card-premium { background: linear-gradient(145deg, #111827 0%, #030712 100%); border: 1px solid rgba(255,255,255,0.05); }
+        
+        /* Lightbox Animasi */
+        #lightbox { transition: opacity 0.3s ease; }
+        #lightbox.hidden { opacity: 0; pointer-events: none; }
+        #lightbox:not(.hidden) { opacity: 1; pointer-events: auto; }
+        .zoom-img { transform: scale(0.9); transition: transform 0.3s ease; }
+        #lightbox:not(.hidden) .zoom-img { transform: scale(1); }
     </style>
 </head>
-<body class="min-h-screen relative overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen relative overflow-x-hidden selection:bg-indigo-500 selection:text-white pb-24">
 
-    <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
-
-    <nav class="glass-header sticky top-0 z-50 px-6 py-4">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-extrabold tracking-tighter">TRUST<span class="text-indigo-500">PORTFOLIO</span></h1>
-            <div class="flex gap-4">
-                <div class="text-right">
-                    <p class="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Total Testimoni</p>
-                    <p class="text-lg font-black text-white leading-tight" id="pubTotalTesti">0</p>
-                </div>
-            </div>
+    <div class="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[300px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
+    <nav class="sticky top-0 z-40 px-6 py-6 bg-[#030712]/80 backdrop-blur-md border-b border-white/5">
+        <div class="max-w-7xl mx-auto text-center">
+            <h1 class="text-2xl font-extrabold tracking-tighter">TRUST<span class="text-indigo-500">MEDIA</span></h1>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-6 py-20 relative z-10">
-        <div class="text-center mb-20">
-            <h2 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">
-                Bukti <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Kualitas</span> Kami.
-            </h2>
-            <p class="text-lg text-zinc-400 max-w-2xl mx-auto font-medium">Jejak rekam digital dan tingkat kepuasan pelanggan yang telah mempercayakan project mereka kepada tim kami.</p>
-            
-            <div class="mt-12 flex justify-center">
-                <select id="filterAdmin" onchange="loadTesti()" class="appearance-none bg-zinc-900 border border-zinc-800 text-white px-8 py-4 rounded-full text-sm font-bold tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all cursor-pointer hover:bg-zinc-800">
-                    <option value="semua">Semua Portofolio</option>
-                    </select>
-            </div>
+    <main class="max-w-7xl mx-auto px-6 py-16 relative z-10">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight">Katalog <span class="text-indigo-400">Keberhasilan.</span></h2>
+            <p class="text-zinc-400 font-medium max-w-xl mx-auto mb-10">Daftar transaksi dan testimoni valid dari pembeli kami.</p>
+            <select id="filterAdmin" onchange="loadTesti()" class="appearance-none bg-zinc-900 border border-zinc-800 text-white px-8 py-4 rounded-full text-sm font-bold uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-xl"></select>
         </div>
 
-        <div id="testiContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            <div class="col-span-full flex justify-center py-20">
-                <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        </div>
+        <div id="testiContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8"></div>
     </main>
+
+    <div id="socialContainer" class="fixed bottom-6 right-6 z-40 flex flex-col gap-3"></div>
+
+    <div id="lightbox" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-4 cursor-zoom-out" onclick="closeLightbox()">
+        <img id="lightboxImg" src="" class="zoom-img max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl border border-white/10" onclick="event.stopPropagation()">
+        <button class="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 p-3 rounded-full font-bold backdrop-blur-md transition">✕</button>
+    </div>
 
     <script>
         async function initPublic() {
-            // Ambil Statistik
-            const statRes = await fetch('/api/stats');
-            const statData = await statRes.json();
-            document.getElementById('pubTotalTesti').innerText = statData.totalTesti;
-
-            // Ambil Filter Owner
+            // Load Filter
             const ownerRes = await fetch('/api/owners');
-            const owners = await ownerRes.json();
             const select = document.getElementById('filterAdmin');
             select.innerHTML = '<option value="semua">Semua Portofolio</option>';
-            owners.forEach(owner => {
-                select.innerHTML += `<option value="${owner.name}">Portofolio ${owner.name}</option>`;
-            });
+            (await ownerRes.json()).forEach(o => select.innerHTML += `<option value="${o.name}">Portofolio ${o.name}</option>`);
+
+            // Load Sosial Media Settings
+            const setRes = await fetch('/api/settings');
+            const settings = await setRes.json();
+            const socials = settings.socials;
+            const socContainer = document.getElementById('socialContainer');
+            
+            // Render Logo WA Channel
+            if(socials?.waChannel?.active) {
+                socContainer.innerHTML += `<a href="${socials.waChannel.link}" target="_blank" class="bg-green-500 hover:bg-green-400 text-white p-4 rounded-full shadow-lg hover:-translate-y-1 transition flex items-center justify-center" title="Saluran WhatsApp"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.385 0 .003 5.381.003 12.029c0 2.124.553 4.195 1.604 6.015L.001 24l6.111-1.602c1.764.953 3.754 1.455 5.918 1.455h.004c6.645 0 12.026-5.38 12.026-12.028C24.06 5.38 18.681 0 12.031 0zm0 21.847h-.003c-1.8 0-3.567-.484-5.114-1.4l-.367-.217-3.8.996.996-3.7-.238-.378a9.99 9.99 0 0 1-1.528-5.32c0-5.518 4.492-10.01 10.01-10.01 5.517 0 10.009 4.492 10.009 10.01s-4.492 10.01-10.01 10.01zm5.492-7.513c-.301-.151-1.782-.879-2.059-.979-.277-.1-.479-.151-.681.151-.202.302-.781.979-.958 1.181-.176.202-.353.227-.654.076-.301-.151-1.274-.47-2.427-1.5-.898-.802-1.504-1.794-1.681-2.096-.176-.302-.019-.465.132-.616.135-.135.301-.353.452-.529.151-.177.202-.302.302-.503.1-.202.05-.378-.026-.529-.076-.151-.681-1.642-.932-2.247-.246-.593-.496-.512-.681-.522l-.581-.01c-.202 0-.529.076-.806.378-.277.302-1.059 1.035-1.059 2.524 0 1.489 1.084 2.928 1.235 3.129.151.202 2.133 3.256 5.166 4.566.721.312 1.283.498 1.722.637.725.23 1.385.197 1.905.12.584-.087 1.782-.728 2.034-1.432.251-.704.251-1.309.176-1.432-.075-.124-.277-.2-.578-.352z"/></svg></a>`;
+            }
+            // Render Logo WA Owner
+            if(socials?.waOwner?.active) {
+                socContainer.innerHTML += `<a href="${socials.waOwner.link}" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white p-4 rounded-full shadow-lg hover:-translate-y-1 transition flex items-center justify-center" title="Chat Admin WA"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.031 0C5.385 0 .003 5.381.003 12.029c0 2.124.553 4.195 1.604 6.015L.001 24l6.111-1.602c1.764.953 3.754 1.455 5.918 1.455h.004c6.645 0 12.026-5.38 12.026-12.028C24.06 5.38 18.681 0 12.031 0zm0 21.847h-.003c-1.8 0-3.567-.484-5.114-1.4l-.367-.217-3.8.996.996-3.7-.238-.378a9.99 9.99 0 0 1-1.528-5.32c0-5.518 4.492-10.01 10.01-10.01 5.517 0 10.009 4.492 10.009 10.01s-4.492 10.01-10.01 10.01zm5.492-7.513c-.301-.151-1.782-.879-2.059-.979-.277-.1-.479-.151-.681.151-.202.302-.781.979-.958 1.181-.176.202-.353.227-.654.076-.301-.151-1.274-.47-2.427-1.5-.898-.802-1.504-1.794-1.681-2.096-.176-.302-.019-.465.132-.616.135-.135.301-.353.452-.529.151-.177.202-.302.302-.503.1-.202.05-.378-.026-.529-.076-.151-.681-1.642-.932-2.247-.246-.593-.496-.512-.681-.522l-.581-.01c-.202 0-.529.076-.806.378-.277.302-1.059 1.035-1.059 2.524 0 1.489 1.084 2.928 1.235 3.129.151.202 2.133 3.256 5.166 4.566.721.312 1.283.498 1.722.637.725.23 1.385.197 1.905.12.584-.087 1.782-.728 2.034-1.432.251-.704.251-1.309.176-1.432-.075-.124-.277-.2-.578-.352z"/></svg></a>`;
+            }
+            // Render Logo TikTok
+            if(socials?.tiktok?.active) {
+                socContainer.innerHTML += `<a href="${socials.tiktok.link}" target="_blank" class="bg-black hover:bg-zinc-800 border border-zinc-700 text-white p-4 rounded-full shadow-lg hover:-translate-y-1 transition flex items-center justify-center" title="TikTok"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 448 512"><path d="M448,209.91a210.06,210.06,0,0,1-122.77-39.25V349.38A162.55,162.55,0,1,1,185,188.31V278.2a74.62,74.62,0,1,0,52.23,71.18V0l88,0a121.18,121.18,0,0,0,1.86,22.17h0A122.18,122.18,0,0,0,381,102.39a121.43,121.43,0,0,0,67,20.14Z"/></svg></a>`;
+            }
 
             loadTesti();
+        }
+
+        function openLightbox(imgUrl) {
+            document.getElementById('lightboxImg').src = imgUrl;
+            document.getElementById('lightbox').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Biar background ga bisa di-scroll
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.add('hidden');
+            document.body.style.overflow = 'auto';
         }
 
         async function loadTesti() {
             const admin = document.getElementById("filterAdmin").value;
             const container = document.getElementById("testiContainer");
+            const data = await (await fetch(`/api/testi?admin=${admin}`)).json();
             
-            try {
-                const res = await fetch(`/api/testi?admin=${admin}`);
-                const data = await res.json();
-                
-                container.innerHTML = ""; 
-                if(data.length === 0) return container.innerHTML = `<div class="col-span-full py-20 text-center"><p class="text-zinc-600 text-2xl font-bold">Belum ada portofolio di kategori ini.</p></div>`;
+            container.innerHTML = ""; 
+            if(data.length === 0) return container.innerHTML = `<div class="col-span-full py-10 text-center text-zinc-500 font-bold">Belum ada portofolio.</div>`;
 
-                data.forEach((item) => {
-                    const date = new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-                    container.innerHTML += `
-                        <div class="card-premium rounded-3xl overflow-hidden group hover:-translate-y-2 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/20">
-                            <div class="relative overflow-hidden aspect-[4/3]">
-                                <img src="${item.imageUrl}" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-in-out">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                                <div class="absolute bottom-4 left-4 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-xs font-bold uppercase tracking-wider text-white">
-                                    By: ${item.uploadedBy}
-                                </div>
-                            </div>
-                            <div class="p-8">
-                                <p class="text-indigo-400 font-bold text-sm mb-2 tracking-widest uppercase">${date}</p>
-                                <h3 class="text-2xl font-extrabold text-white mb-2 leading-tight">${item.productName}</h3>
-                                <p class="text-zinc-400 font-semibold text-lg">Rp ${item.price.toLocaleString('id-ID')}</p>
+            data.forEach((item) => {
+                const date = new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                // Di sini ditambahkan fungsi onclick="openLightbox(...)"
+                container.innerHTML += `
+                    <div class="card-premium rounded-3xl overflow-hidden group hover:shadow-2xl hover:shadow-indigo-500/10">
+                        <div class="relative overflow-hidden aspect-[4/3] cursor-zoom-in" onclick="openLightbox('${item.imageUrl}')">
+                            <img src="${item.imageUrl}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out">
+                            <div class="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-all"></div>
+                            <div class="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-xs font-bold text-white uppercase tracking-wider">
+                                📸 ${item.uploadedBy}
                             </div>
                         </div>
-                    `;
-                });
-            } catch (err) {
-                container.innerHTML = `<p class="text-red-500 text-center col-span-full">Gagal memuat server.</p>`;
-            }
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-black text-white leading-tight">${item.productName}</h3>
+                                    <p class="text-zinc-400 font-medium text-sm mt-1">Pembeli: <span class="text-white">${item.buyerName}</span></p>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-end pt-4 border-t border-white/5">
+                                <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest">${date}</p>
+                                <p class="text-indigo-400 font-black text-lg">Rp ${item.price.toLocaleString('id-ID')}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
         }
         
         initPublic();
