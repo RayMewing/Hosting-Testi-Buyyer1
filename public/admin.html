@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Testimoni</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-slate-900 text-slate-200 font-sans min-h-screen">
+
+    <div id="loginScreen" class="flex items-center justify-center min-h-screen absolute inset-0 z-50 bg-slate-900">
+        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md">
+            <h2 class="text-3xl font-bold mb-6 text-center text-indigo-400">Login Admin</h2>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Username</label>
+                    <input type="text" id="loginUser" class="w-full bg-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Password</label>
+                    <input type="password" id="loginPass" class="w-full bg-slate-700 text-white p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 p-3 rounded-lg font-bold transition shadow-lg shadow-indigo-500/30 mt-4">Masuk</button>
+            </form>
+            <p class="text-center text-slate-500 text-sm mt-4 cursor-pointer hover:text-indigo-400 transition" onclick="initSystem()">Initialize Database (First time only)</p>
+        </div>
+    </div>
+
+    <div id="mainDashboard" class="hidden max-w-5xl mx-auto p-6">
+        <div class="flex justify-between items-center mb-8 bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg">
+            <div>
+                <h1 class="text-2xl font-bold text-indigo-400">Dashboard Admin</h1>
+                <p class="text-sm text-slate-400">Login sebagai: <span id="userNameDisplay" class="font-bold text-white uppercase"></span> (<span id="userRoleDisplay"></span>)</p>
+            </div>
+            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-bold text-sm transition">Logout</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="space-y-6">
+                <div class="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                    <h2 class="text-xl font-semibold mb-4 text-white">Tambah Testimoni</h2>
+                    <form id="uploadForm" class="space-y-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">URL Gambar (Supabase/Catbox)</label>
+                            <input type="url" id="imgUrl" class="w-full bg-slate-700 text-white p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Nama Produk / Testi</label>
+                            <input type="text" id="prodName" class="w-full bg-slate-700 text-white p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">Harga (Angka)</label>
+                            <input type="number" id="price" class="w-full bg-slate-700 text-white p-2.5 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm" required>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 p-2.5 rounded-lg font-bold text-sm transition mt-2">Upload Data</button>
+                    </form>
+                </div>
+
+                <div id="superAdminPanel" class="hidden bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-500"></div>
+                    <h2 class="text-xl font-semibold mb-4 text-white">Tambah Admin (Superadmin)</h2>
+                    <form id="addAdminForm" class="space-y-4">
+                        <input type="text" id="newAdminUser" placeholder="Username Baru" class="w-full bg-slate-700 text-white p-2.5 rounded-lg outline-none text-sm" required>
+                        <input type="password" id="newAdminPass" placeholder="Password Baru" class="w-full bg-slate-700 text-white p-2.5 rounded-lg outline-none text-sm" required>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 p-2.5 rounded-lg font-bold text-sm transition">Buat Akses Admin</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700">
+                <h2 class="text-xl font-semibold mb-4 text-white">Kelola Testimoni Lu</h2>
+                <div id="adminTable" class="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+                    <p class="text-slate-400 text-center py-4">Memuat data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cek Login State
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        const username = localStorage.getItem('username');
+
+        if (token) { showDashboard(); }
+
+        function showDashboard() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            document.getElementById('userNameDisplay').innerText = username;
+            document.getElementById('userRoleDisplay').innerText = role;
+            if (role === 'superadmin') document.getElementById('superAdminPanel').classList.remove('hidden');
+            loadAdminData();
+        }
+
+        // Fungsi Init (Bikin Superadmin Ray otomatis saat DB kosong)
+        async function initSystem() {
+            const res = await fetch('/api/init');
+            const data = await res.json();
+            Swal.fire('Info', data.message, 'info');
+        }
+
+        // Login Handler
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.innerHTML = 'Memproses...';
+            
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('loginUser').value,
+                    password: document.getElementById('loginPass').value
+                })
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('role', data.role);
+                localStorage.setItem('username', data.username);
+                Swal.fire({icon: 'success', title: 'Login Berhasil', showConfirmButton: false, timer: 1500}).then(() => location.reload());
+            } else {
+                Swal.fire('Error', data.error, 'error');
+                btn.innerHTML = 'Masuk';
+            }
+        });
+
+        // Logout
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        // Tambah Admin (Hanya Superadmin)
+        document.getElementById("addAdminForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: JSON.stringify({
+                    username: document.getElementById('newAdminUser').value,
+                    password: document.getElementById('newAdminPass').value
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                Swal.fire('Sukses!', 'Admin baru berhasil ditambahkan.', 'success');
+                e.target.reset();
+            } else {
+                Swal.fire('Gagal', data.error, 'error');
+            }
+        });
+
+        // Upload Testimoni
+        document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/testi', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                body: JSON.stringify({
+                    imageUrl: document.getElementById("imgUrl").value,
+                    productName: document.getElementById("prodName").value,
+                    price: document.getElementById("price").value
+                })
+            });
+            
+            if (res.ok) {
+                Swal.fire({icon: 'success', title: 'Tersimpan!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
+                e.target.reset();
+                loadAdminData();
+            } else { Swal.fire('Error', 'Gagal upload', 'error'); }
+        });
+
+        // Load Data Admin
+        async function loadAdminData() {
+            // Ambil hanya data milik admin yang login
+            const res = await fetch(`/api/testi?admin=${username}`);
+            const data = await res.json();
+            const container = document.getElementById("adminTable");
+            container.innerHTML = "";
+
+            if(data.length === 0) return container.innerHTML = `<p class="text-slate-400 text-center py-4">Belum ada data testi lu.</p>`;
+
+            data.forEach(item => {
+                container.innerHTML += `
+                    <div class="flex flex-col sm:flex-row items-center justify-between bg-slate-700 p-4 rounded-xl shadow border border-slate-600 gap-4 transition hover:bg-slate-600">
+                        <div class="flex items-center gap-4 w-full">
+                            <img src="${item.imageUrl}" class="w-16 h-16 object-cover rounded-lg shadow-sm">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-white text-lg">${item.productName}</h4>
+                                <p class="text-sm text-indigo-300 font-semibold">Rp ${item.price.toLocaleString('id-ID')}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="editNama('${item._id}', '${item.productName}')" class="flex-1 sm:flex-none bg-yellow-500/20 hover:bg-yellow-500/40 text-yellow-500 px-4 py-2 rounded-lg font-bold text-sm transition">Edit</button>
+                            <button onclick="hapusTesti('${item._id}')" class="flex-1 sm:flex-none bg-red-500/20 hover:bg-red-500/40 text-red-500 px-4 py-2 rounded-lg font-bold text-sm transition">Hapus</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Edit Nama
+        async function editNama(id, oldName) {
+            const { value: newName } = await Swal.fire({
+                title: 'Edit Nama Produk',
+                input: 'text',
+                inputValue: oldName,
+                showCancelButton: true,
+                background: '#1e293b', color: '#fff'
+            });
+
+            if (newName && newName !== oldName) {
+                const res = await fetch(`/api/testi/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: JSON.stringify({ productName: newName })
+                });
+                if(res.ok) { Swal.fire('Teredit!', '', 'success'); loadAdminData(); }
+                else { Swal.fire('Error', 'Gagal edit atau bukan testi lu', 'error'); }
+            }
+        }
+
+        // Hapus Testi
+        async function hapusTesti(id) {
+            const result = await Swal.fire({
+                title: 'Yakin mau hapus?',
+                text: "Data yang dihapus nggak bisa balik lho!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus!',
+                background: '#1e293b', color: '#fff'
+            });
+
+            if (result.isConfirmed) {
+                const res = await fetch(`/api/testi/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if(res.ok) { Swal.fire('Terhapus!', 'Testi lu udah dihilangkan.', 'success'); loadAdminData(); }
+                else { Swal.fire('Error', 'Gagal hapus data', 'error'); }
+            }
+        }
+    </script>
+</body>
+</html>
