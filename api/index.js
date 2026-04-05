@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -9,7 +8,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Sambung ke MongoDB dengan caching untuk Vercel Serverless
+// ==========================================
+// DATA LOGIN BARENGAN (Hardcoded di sini)
+// ==========================================
+const ADMIN_USER = process.env.ADMIN_USER || "admin";
+const ADMIN_PASS = process.env.ADMIN_PASS || "gas123";
+const JWT_SECRET = process.env.JWT_SECRET || "rahasia_testi_keren";
+
+// Sambung ke MongoDB untuk Serverless Vercel
 let cachedDb = null;
 async function connectDB() {
     if (cachedDb) return cachedDb;
@@ -18,117 +24,72 @@ async function connectDB() {
     return db;
 }
 
-// Bikin Struktur Data (Schema)
-const UserSchema = new mongoose.Schema({
-    username: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
-    role: { type: String, enum: ['superadmin', 'admin'], default: 'admin' }
-});
-const User = mongoose.models.User || mongoose.model('User', UserSchema);
-
+// Hanya ada 1 Schema: TESTIMONI
 const TestiSchema = new mongoose.Schema({
     imageUrl: String,
     productName: String,
     price: Number,
-    uploadedBy: String,
+    uploadedBy: String, // Buat nandain ini punya Ray atau Vald
     date: { type: Date, default: Date.now }
 });
 const Testi = mongoose.models.Testi || mongoose.model('Testi', TestiSchema);
 
-// JWT Middleware (Satpam yang ngecek Token Login)
+// Middleware Cek Token
 const authenticate = (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ error: "Akses ditolak, belum login!" });
+    if (!token) return res.status(401).json({ error: "Belum login bro!" });
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'rahasia_negara');
-        req.user = decoded;
+        req.user = jwt.verify(token, JWT_SECRET);
         next();
-    } catch (err) { res.status(400).json({ error: "Token tidak valid!" }); }
+    } catch (err) { res.status(400).json({ error: "Token expired atau salah!" }); }
 };
 
 // ================= API ROUTES =================
 
-// 1. Inisialisasi Superadmin Pertama (Jalan otomatis kalau blm ada user)
-app.get('/api/init', async (req, res) => {
-    await connectDB();
-    const count = await User.countDocuments();
-    if (count === 0) {
-        const hashedPassword = await bcrypt.hash("admin123", 10);
-        await User.create({ username: "ray", password: hashedPassword, role: "superadmin" });
-        return res.json({ message: "Superadmin 'ray' berhasil dibuat dengan password 'admin123'" });
-    }
-    res.json({ message: "Sistem sudah diinisialisasi sebelumnya." });
-});
-
-// 2. Login
-app.post('/api/login', async (req, res) => {
-    await connectDB();
+// 1. Login (Cek dari data di atas)
+app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    const user = await User.findOne({ username });
-    if (!user) return res.status(400).json({ error: "Username tidak ditemukan" });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: "Password salah!" });
-
-    const token = jwt.sign({ id: user._id, username: user.username, role: user.role }, process.env.JWT_SECRET || 'rahasia_negara', { expiresIn: '1d' });
-    res.json({ message: "Login sukses!", token, role: user.role, username: user.username });
+    if (username === ADMIN_USER && password === ADMIN_PASS) {
+        const token = jwt.sign({ role: 'admin' }, JWT_SECRET, { expiresIn: '1d' });
+        return res.json({ message: "Berhasil masuk!", token });
+    }
+    res.status(400).json({ error: "Username atau Password salah bro!" });
 });
 
-// 3. Tambah Admin Baru (Khusus Superadmin)
-app.post('/api/users', authenticate, async (req, res) => {
-    await connectDB();
-    if (req.user.role !== 'superadmin') return res.status(403).json({ error: "Hanya superadmin yang bisa tambah admin!" });
-    
-    try {
-        const { username, password } = req.body;
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await User.create({ username, password: hashedPassword, role: 'admin' });
-        res.json({ message: "Admin baru berhasil dibuat!", data: newUser });
-    } catch (err) { res.status(400).json({ error: "Username mungkin sudah ada." }); }
-});
-
-// 4. Ambil Testi (Public)
+// 2. Ambil Testi (Public)
 app.get('/api/testi', async (req, res) => {
     await connectDB();
     const { admin } = req.query;
     let filter = {};
-    if (admin && admin !== 'semua') filter.uploadedBy = admin;
+    if (admin && admin !== 'semua') filter.uploadedBy = { $regex: new RegExp(`^${admin}$`, 'i') };
     const data = await Testi.find(filter).sort({ date: -1 });
     res.json(data);
 });
 
-// 5. Tambah Testi Baru (Auth)
+// 3. Tambah Testi (Butuh Login)
 app.post('/api/testi', authenticate, async (req, res) => {
     await connectDB();
     try {
-        // Otomatis pakai nama admin yang lagi login
-        const newTesti = new Testi({ ...req.body, uploadedBy: req.user.username });
-        await newTesti.save();
-        res.json({ message: 'Berhasil upload testi!', data: newTesti });
+        const newTesti = await Testi.create(req.body);
+        res.json({ message: 'Berhasil upload!', data: newTesti });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 6. Edit Nama Testi (Hanya milik sendiri)
+// 4. Edit Nama Testi (Butuh Login)
 app.put('/api/testi/:id', authenticate, async (req, res) => {
     await connectDB();
     try {
-        const testi = await Testi.findOneAndUpdate(
-            { _id: req.params.id, uploadedBy: req.user.username }, // Cek kepemilikan
-            { productName: req.body.productName },
-            { new: true }
-        );
-        if (!testi) return res.status(403).json({ error: "Gagal edit. Ini bukan testi lu!" });
-        res.json({ message: 'Berhasil diupdate!', data: testi });
+        const updated = await Testi.findByIdAndUpdate(req.params.id, { productName: req.body.productName }, { new: true });
+        res.json({ message: 'Berhasil update!', data: updated });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 7. Hapus Testi (Hanya milik sendiri)
+// 5. Hapus Testi (Butuh Login)
 app.delete('/api/testi/:id', authenticate, async (req, res) => {
     await connectDB();
     try {
-        const testi = await Testi.findOneAndDelete({ _id: req.params.id, uploadedBy: req.user.username });
-        if (!testi) return res.status(403).json({ error: "Gagal hapus. Ini bukan testi lu!" });
-        res.json({ message: 'Testi berhasil dihapus!' });
+        await Testi.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Terhapus!' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
