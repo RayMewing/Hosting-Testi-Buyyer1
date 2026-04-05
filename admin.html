@@ -3,94 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Studio X - Admin</title>
+    <title>Studio Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f8fafc; }
-        .glass-panel { background: rgba(24, 24, 27, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
-        .glow-text { text-shadow: 0 0 20px rgba(99, 102, 241, 0.5); }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #030712; color: #f8fafc; }
+        .glass-panel { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen relative overflow-x-hidden">
 
-    <div class="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-indigo-600 rounded-full mix-blend-screen filter blur-[150px] opacity-20 pointer-events-none"></div>
-
-    <div id="loginScreen" class="flex items-center justify-center min-h-screen absolute inset-0 z-50">
+    <div id="loginScreen" class="flex items-center justify-center min-h-screen absolute inset-0 z-50 bg-[#030712]">
         <div class="glass-panel p-10 rounded-3xl w-full max-w-sm shadow-2xl">
-            <h2 class="text-3xl font-extrabold mb-8 text-center tracking-tight">Access <span class="text-indigo-500">Portal</span></h2>
+            <h2 class="text-3xl font-extrabold mb-8 text-center">System<span class="text-indigo-500">Login</span></h2>
             <form id="loginForm" class="space-y-4">
-                <input type="text" id="loginUser" placeholder="Username" class="w-full bg-black/50 text-white px-5 py-4 rounded-xl border border-zinc-800 focus:border-indigo-500 outline-none transition" required>
-                <input type="password" id="loginPass" placeholder="Password" class="w-full bg-black/50 text-white px-5 py-4 rounded-xl border border-zinc-800 focus:border-indigo-500 outline-none transition" required>
-                <button type="submit" class="w-full bg-white text-black hover:bg-indigo-500 hover:text-white py-4 rounded-xl font-bold transition duration-300">Login</button>
+                <input type="text" id="loginUser" placeholder="Username" class="w-full bg-black/50 text-white px-5 py-4 rounded-xl border border-zinc-800 outline-none" required>
+                <input type="password" id="loginPass" placeholder="Password" class="w-full bg-black/50 text-white px-5 py-4 rounded-xl border border-zinc-800 outline-none" required>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-xl font-bold transition">Masuk</button>
             </form>
         </div>
     </div>
 
     <div id="mainDashboard" class="hidden max-w-7xl mx-auto p-6 lg:p-10 relative z-10">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-10">
-            <div>
-                <h1 class="text-4xl font-extrabold tracking-tight glow-text">Command Center</h1>
-                <p class="text-zinc-400 mt-2 font-medium">Sistem Manajemen Testimoni Langsung</p>
-            </div>
-            <button onclick="logout()" class="mt-4 md:mt-0 bg-zinc-800 hover:bg-red-500/20 hover:text-red-400 text-zinc-300 px-6 py-3 rounded-full font-bold transition border border-zinc-700">Logout</button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-            <div class="glass-panel p-6 rounded-3xl flex items-center justify-between">
-                <div>
-                    <p class="text-zinc-400 text-sm font-bold uppercase tracking-widest">Total Testimoni</p>
-                    <h3 class="text-4xl font-black mt-2" id="statTotalTesti">0</h3>
-                </div>
-                <div class="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-2xl">📸</div>
-            </div>
-            <div class="glass-panel p-6 rounded-3xl flex items-center justify-between">
-                <div>
-                    <p class="text-zinc-400 text-sm font-bold uppercase tracking-widest">Total Transaksi</p>
-                    <h3 class="text-4xl font-black mt-2 text-emerald-400" id="statTotalRevenue">Rp 0</h3>
-                </div>
-                <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-2xl">💰</div>
-            </div>
+        <div class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-extrabold">Command <span class="text-indigo-500">Center</span></h1>
+            <button onclick="logout()" class="bg-red-500/10 text-red-400 px-6 py-2 rounded-full font-bold">Logout</button>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="space-y-6 lg:col-span-1">
-                <div class="glass-panel p-6 rounded-3xl">
-                    <h2 class="text-lg font-bold mb-4 text-white">1. Kelola Pemilik</h2>
-                    <form id="ownerForm" class="flex gap-2 mb-4">
-                        <input type="text" id="newOwnerName" placeholder="Nama Baru..." class="w-full bg-black/50 px-4 py-3 rounded-xl outline-none border border-zinc-800" required>
-                        <button type="submit" class="bg-indigo-600 px-5 rounded-xl font-bold">+</button>
-                    </form>
-                    <div id="ownerList" class="space-y-2 text-sm max-h-32 overflow-y-auto"></div>
-                </div>
-
+                
                 <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-                    <h2 class="text-lg font-bold mb-4 text-white">2. Upload Media Langsung</h2>
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-cyan-400"></div>
+                    <h2 class="text-lg font-bold mb-4 text-white">Upload Media Testi</h2>
                     <form id="uploadForm" class="space-y-4">
-                        <select id="uploaderName" class="w-full bg-black/50 px-4 py-3 rounded-xl outline-none border border-zinc-800" required></select>
+                        <select id="uploaderName" class="w-full bg-black/50 px-4 py-3 rounded-xl border border-zinc-800 outline-none text-sm" required></select>
+                        <input type="text" id="buyerName" placeholder="Nama Pembeli" class="w-full bg-black/50 px-4 py-3 rounded-xl border border-zinc-800 outline-none text-sm" required>
+                        <input type="text" id="prodName" placeholder="Produk Yang Dibeli" class="w-full bg-black/50 px-4 py-3 rounded-xl border border-zinc-800 outline-none text-sm" required>
+                        <input type="number" id="price" placeholder="Harga (Rp)" class="w-full bg-black/50 px-4 py-3 rounded-xl border border-zinc-800 outline-none text-sm" required>
                         
                         <div class="border-2 border-dashed border-zinc-700 p-6 rounded-xl text-center hover:border-indigo-500 transition cursor-pointer relative group">
-                            <label class="cursor-pointer block absolute inset-0 z-10 w-full h-full">
-                                <input type="file" id="imageFile" accept="image/*" class="hidden" required>
-                            </label>
-                            <span class="text-sm font-bold text-zinc-400 group-hover:text-indigo-400">Klik / Drop Foto Di Sini</span>
+                            <label class="absolute inset-0 z-10 w-full h-full cursor-pointer"><input type="file" id="imageFile" accept="image/*" class="hidden" required></label>
+                            <span class="text-xs font-bold text-zinc-400">Pilih Foto Testi</span>
                             <p id="fileNameDisplay" class="text-xs text-indigo-400 mt-2 font-bold"></p>
                         </div>
+                        <button type="submit" id="btnUpload" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-xl font-bold transition mt-2">Publish Data</button>
+                    </form>
+                </div>
 
-                        <input type="text" id="prodName" placeholder="Nama Produk" class="w-full bg-black/50 px-4 py-3 rounded-xl outline-none border border-zinc-800" required>
-                        <input type="number" id="price" placeholder="Harga" class="w-full bg-black/50 px-4 py-3 rounded-xl outline-none border border-zinc-800" required>
-                        
-                        <button type="submit" id="btnUpload" class="w-full bg-white text-black hover:bg-indigo-500 hover:text-white py-4 rounded-xl font-extrabold transition mt-2">Publish ke Database</button>
+                <div class="glass-panel p-6 rounded-3xl">
+                    <h2 class="text-lg font-bold mb-4 text-white">Pengaturan Sistem</h2>
+                    <form id="settingsForm" class="space-y-5">
+                        <div class="p-4 bg-black/40 rounded-xl border border-zinc-800 space-y-3">
+                            <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Akun Admin</p>
+                            <input type="text" id="setAdminUser" placeholder="Username Baru" class="w-full bg-black/50 px-3 py-2 rounded-lg border border-zinc-700 text-sm outline-none">
+                            <input type="password" id="setAdminPass" placeholder="Password Baru" class="w-full bg-black/50 px-3 py-2 rounded-lg border border-zinc-700 text-sm outline-none">
+                        </div>
+
+                        <div class="p-4 bg-black/40 rounded-xl border border-zinc-800 space-y-3">
+                            <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Sosial Media</p>
+                            
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="chkWaCh" class="w-4 h-4 rounded accent-indigo-500">
+                                <input type="text" id="linkWaCh" placeholder="Link Saluran WA" class="w-full bg-black/50 px-3 py-2 rounded-lg border border-zinc-700 text-sm outline-none">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="chkWaOw" class="w-4 h-4 rounded accent-indigo-500">
+                                <input type="text" id="linkWaOw" placeholder="Link WA Owner" class="w-full bg-black/50 px-3 py-2 rounded-lg border border-zinc-700 text-sm outline-none">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="chkTikTok" class="w-4 h-4 rounded accent-indigo-500">
+                                <input type="text" id="linkTikTok" placeholder="Link TikTok" class="w-full bg-black/50 px-3 py-2 rounded-lg border border-zinc-700 text-sm outline-none">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-zinc-800 hover:bg-zinc-700 py-3 rounded-xl font-bold transition text-sm">Simpan Pengaturan</button>
                     </form>
                 </div>
             </div>
 
-            <div class="lg:col-span-2 glass-panel p-6 rounded-3xl">
-                <h2 class="text-xl font-bold text-white mb-6">Database Tersimpan</h2>
-                <div id="adminTable" class="space-y-3 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar"></div>
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass-panel p-6 rounded-3xl">
+                    <form id="ownerForm" class="flex gap-2">
+                        <input type="text" id="newOwnerName" placeholder="Tambah Nama Tim / Owner" class="w-full bg-black/50 px-4 py-3 rounded-xl border border-zinc-800 outline-none text-sm" required>
+                        <button type="submit" class="bg-indigo-600 px-6 rounded-xl font-bold">+</button>
+                    </form>
+                </div>
+
+                <div class="glass-panel p-6 rounded-3xl">
+                    <h2 class="text-xl font-bold text-white mb-6">Database Tersimpan</h2>
+                    <div id="adminTable" class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -110,131 +116,100 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: document.getElementById('loginUser').value, password: document.getElementById('loginPass').value })
             });
-            const data = await res.json();
-            if (res.ok) { localStorage.setItem('token', data.token); location.reload(); }
-            else { Swal.fire({icon:'error', title:'Akses Ditolak', background:'#18181b', color:'#fff'}); }
+            if (res.ok) { localStorage.setItem('token', (await res.json()).token); location.reload(); }
+            else { Swal.fire({icon:'error', title:'Gagal Login', background:'#111827', color:'#fff'}); }
         });
 
         function logout() { localStorage.clear(); location.reload(); }
 
         function initDashboard() {
-            loadStats();
             loadOwners();
             loadAdminData();
-        }
-
-        async function loadStats() {
-            const res = await fetch('/api/stats');
-            const data = await res.json();
-            document.getElementById('statTotalTesti').innerText = data.totalTesti;
-            document.getElementById('statTotalRevenue').innerText = `Rp ${data.totalRevenue.toLocaleString('id-ID')}`;
         }
 
         document.getElementById('imageFile').addEventListener('change', e => {
             if(e.target.files[0]) document.getElementById('fileNameDisplay').innerText = e.target.files[0].name;
         });
 
-        async function loadOwners() {
-            const res = await fetch('/api/owners');
-            const data = await res.json();
-            const select = document.getElementById('uploaderName');
-            const list = document.getElementById('ownerList');
-            select.innerHTML = '<option value="">Pilih Pemilik...</option>';
-            list.innerHTML = '';
-            data.forEach(owner => {
-                select.innerHTML += `<option value="${owner.name}">${owner.name}</option>`;
-                list.innerHTML += `<div class="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-zinc-800">
-                    <span class="font-bold text-zinc-300">${owner.name}</span>
-                    <button onclick="hapusOwner('${owner._id}')" class="text-red-500 font-bold hover:text-red-400">✕</button>
-                </div>`;
-            });
-        }
-
-        document.getElementById('ownerForm').addEventListener('submit', async (e) => {
+        // LOAD & SAVE PENGATURAN
+        document.getElementById("settingsForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-            await fetch('/api/owners', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name: document.getElementById('newOwnerName').value }) });
-            document.getElementById('newOwnerName').value = '';
-            loadOwners();
+            const payload = {
+                adminUser: document.getElementById('setAdminUser').value || undefined,
+                adminPass: document.getElementById('setAdminPass').value || undefined,
+                socials: {
+                    waChannel: { link: document.getElementById('linkWaCh').value, active: document.getElementById('chkWaCh').checked },
+                    waOwner: { link: document.getElementById('linkWaOw').value, active: document.getElementById('chkWaOw').checked },
+                    tiktok: { link: document.getElementById('linkTikTok').value, active: document.getElementById('chkTikTok').checked }
+                }
+            };
+
+            await fetch('/api/settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(payload)
+            });
+            Swal.fire({icon:'success', title:'Tersimpan!', toast:true, position:'top-end', showConfirmButton:false, timer:2000, background:'#111827', color:'#fff'});
         });
 
-        async function hapusOwner(id) {
-            await fetch(`/api/owners/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-            loadOwners();
-        }
-
-        // ==========================================
-        // UPLOAD LANGSUNG KE MONGODB (BASE64 LOGIC)
-        // ==========================================
+        // UPLOAD DATA BARU
         document.getElementById("uploadForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnUpload');
-            btn.innerText = "Processing & Saving..."; btn.disabled = true;
+            btn.innerText = "Mengompres..."; btn.disabled = true;
 
             try {
                 const imageFile = document.getElementById('imageFile').files[0];
+                const compressedFile = await imageCompression(imageFile, { maxSizeMB: 0.5, maxWidthOrHeight: 800, useWebWorker: true });
                 
-                // 1. Wajib dikompres biar Vercel & MongoDB ga error (Max ukuran 800px aja cukup buat web)
-                const options = { maxSizeMB: 0.5, maxWidthOrHeight: 800, useWebWorker: true };
-                const compressedFile = await imageCompression(imageFile, options);
-                
-                // 2. Ubah file fisik jadi teks Base64
                 const reader = new FileReader();
                 reader.readAsDataURL(compressedFile);
                 reader.onloadend = async function() {
-                    const base64String = reader.result; // Ini URL Data yang disimpen ke DB
-
                     const payload = {
                         uploadedBy: document.getElementById("uploaderName").value,
-                        imageUrl: base64String, // Langsung simpen Base64 nya
+                        buyerName: document.getElementById("buyerName").value,
                         productName: document.getElementById("prodName").value,
-                        price: document.getElementById("price").value
+                        price: document.getElementById("price").value,
+                        imageUrl: reader.result
                     };
-
-                    const res = await fetch('/api/testi', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if(res.ok) {
-                        Swal.fire({icon: 'success', title: 'Live di Website!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, background:'#18181b', color:'#fff'});
-                        e.target.reset(); document.getElementById('fileNameDisplay').innerText = '';
-                        initDashboard(); // Refresh Data & Stats
-                    } else {
-                        throw new Error('Database nolak');
-                    }
+                    await fetch('/api/testi', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(payload) });
+                    Swal.fire({icon: 'success', title: 'Terupload!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, background:'#111827', color:'#fff'});
+                    e.target.reset(); document.getElementById('fileNameDisplay').innerText = ''; loadAdminData();
                 };
-            } catch (error) {
-                Swal.fire({icon:'error', title:'Error', text: 'Ukuran terlalu besar atau koneksi putus', background:'#18181b', color:'#fff'});
-            } finally {
-                btn.innerText = "Publish ke Database"; btn.disabled = false;
-            }
+            } finally { btn.innerText = "Publish Data"; btn.disabled = false; }
+        });
+
+        async function loadOwners() {
+            const data = await (await fetch('/api/owners')).json();
+            const select = document.getElementById('uploaderName');
+            select.innerHTML = '<option value="">Pilih Owner...</option>';
+            data.forEach(o => select.innerHTML += `<option value="${o.name}">${o.name}</option>`);
+        }
+        document.getElementById('ownerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await fetch('/api/owners', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ name: document.getElementById('newOwnerName').value }) });
+            document.getElementById('newOwnerName').value = ''; loadOwners();
         });
 
         async function loadAdminData() {
-            const res = await fetch(`/api/testi`);
-            const data = await res.json();
+            const data = await (await fetch(`/api/testi`)).json();
             const container = document.getElementById("adminTable");
             container.innerHTML = "";
-            if(data.length === 0) return container.innerHTML = `<p class="text-zinc-600 text-center py-10 font-bold">Belum ada media.</p>`;
-
             data.forEach(item => {
+                const date = new Date(item.date).toLocaleDateString('id-ID');
                 container.innerHTML += `
-                    <div class="flex items-center bg-black/40 p-4 rounded-2xl border border-zinc-800 gap-4 hover:border-zinc-600 transition">
+                    <div class="flex items-center bg-black/40 p-4 rounded-2xl border border-zinc-800 gap-4 hover:border-indigo-500/50 transition">
                         <img src="${item.imageUrl}" class="w-16 h-16 object-cover rounded-xl border border-zinc-700">
                         <div class="flex-1">
-                            <h4 class="font-extrabold text-white text-lg">${item.productName}</h4>
-                            <p class="text-xs text-indigo-400 font-bold uppercase tracking-wider">${item.uploadedBy} <span class="text-zinc-500 px-2">•</span> <span class="text-emerald-400">Rp ${item.price.toLocaleString('id-ID')}</span></p>
+                            <h4 class="font-bold text-white">${item.productName}</h4>
+                            <p class="text-xs text-zinc-400 mt-1">Pembeli: <span class="text-white">${item.buyerName}</span> | Tgl: ${date}</p>
+                            <p class="text-xs text-indigo-400 font-bold uppercase mt-1">${item.uploadedBy} • Rp ${item.price.toLocaleString('id-ID')}</p>
                         </div>
-                        <button onclick="hapusTesti('${item._id}')" class="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-4 py-3 rounded-xl font-bold text-sm transition">Hapus</button>
+                        <button onclick="hapusTesti('${item._id}')" class="bg-red-500/10 text-red-500 px-4 py-2 rounded-xl font-bold text-sm">Hapus</button>
                     </div>`;
             });
         }
-
-        async function hapusTesti(id) {
-            await fetch(`/api/testi/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-            initDashboard();
-        }
+        async function hapusTesti(id) { await fetch(`/api/testi/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); loadAdminData(); }
     </script>
 </body>
 </html>
